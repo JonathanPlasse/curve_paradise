@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "curve-paradise"
+version = "0.1.0"
+description = ""
+authors = ["Jonathan Plasse <jonathan.plasse@drotek.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+bokeh = "^3.4.1"
+numpy = "^1.26.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
