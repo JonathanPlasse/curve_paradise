@@ -12,28 +12,22 @@ def interpolate(x, coeffs, deg):
     )
 
 
-def calculate_profile(t, ts, js, init=(0, 0, 0)):
-    a = np.zeros_like(t)
-    v = np.zeros_like(t)
-    p = np.zeros_like(t)
-
+def calculate_profile(t, ts, js, init=[0, 0, 0]):
+    profiles = [np.zeros_like(t) for _ in range(len(init) + 1)]
     ts = [0, 1 / 4, 3 / 4]
-
-    a_0, v_0, p_0 = init
 
     for i, ji in enumerate(js):
         is_last = i == len(js) - 1
         mask = (t >= ts[i]) & (t < ts[i + 1]) if not is_last else t >= ts[i]
-        poly = [ji, a_0, v_0, p_0]
-        a[mask] = interpolate(t[mask] - ts[i], poly, deg=1)
-        v[mask] = interpolate(t[mask] - ts[i], poly, deg=2)
-        p[mask] = interpolate(t[mask] - ts[i], poly, deg=3)
+        poly = [ji, *init]
+        for deg, profile in enumerate(profiles):
+            profile[mask] = interpolate(t[mask] - ts[i], poly, deg=deg)
         if not is_last:
-            a_0 = interpolate(ts[i + 1] - ts[i], poly, deg=1)
-            v_0 = interpolate(ts[i + 1] - ts[i], poly, deg=2)
-            p_0 = interpolate(ts[i + 1] - ts[i], poly, deg=3)
+            init = [
+                interpolate(ts[i + 1] - ts[i], poly, deg=deg) for deg in range(1, len(init) + 1)
+            ]
 
-    return a, v, p
+    return profiles
 
 
 # Initial parameter values
@@ -50,12 +44,12 @@ slider_d = Slider(start=-5, end=5, value=d_init, step=0.1, title="d_max")
 
 
 def get_data():
-    a, v, p = calculate_profile(
+    j, a, v, p = calculate_profile(
         time,
         [0, 1 / 4, 3 / 4],
         [slider_a.value, -slider_a.value, slider_a.value],
     )
-    return {"time": time, "position": p, "velocity": v, "acceleration": a}
+    return {"time": time, "position": p, "velocity": v, "acceleration": a, "jerk": j}
 
 
 source = ColumnDataSource(data=get_data())
@@ -82,6 +76,9 @@ plot_velocity.line(x="time", y="velocity", source=source, line_width=3)
 plot_acceleration = figure(x_range=(0, 1), y_range=(-1, 1))
 plot_acceleration.line(x="time", y="acceleration", source=source, line_width=3)
 
+plot_jerk = figure(x_range=(0, 1), y_range=(-1, 1))
+plot_jerk.line(x="time", y="jerk", source=source, line_width=3)
+
 # Display the plot with sliders
 
 curdoc().add_root(
@@ -90,6 +87,6 @@ curdoc().add_root(
         slider_b,
         slider_c,
         slider_d,
-        row(plot_position, plot_velocity, plot_acceleration),
+        row(plot_position, plot_velocity, plot_acceleration, plot_jerk),
     ),
 )
