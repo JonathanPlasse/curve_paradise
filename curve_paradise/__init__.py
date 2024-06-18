@@ -41,10 +41,22 @@ slider_d = Slider(start=0, end=5, value=d, step=0.1, title="d")
 
 
 def get_data():
-    dt = np.power(slider_d.value / (2 * slider_j0.value), 1 / 3)
-    time = np.linspace(0, 4 * dt, 1000)
-    ts = [0, dt, 3 * dt]
-    js = [slider_j0.value, -slider_j0.value, slider_j0.value]
+    dt1_p = np.cbrt(slider_d.value / (2 * slider_j0.value))
+    dt1_v = np.sqrt(slider_v_max.value / slider_j0.value)
+
+    dt1 = min(dt1_p, dt1_v)
+
+    if dt1 == dt1_p:
+        ts = [0, dt1, 3 * dt1]
+        js = [slider_j0.value, -slider_j0.value, slider_j0.value]
+        duration = dt1 * 4
+    elif dt1 == dt1_v:
+        dt2 = (slider_d.value - 2 * slider_j0.value * dt1**3) / slider_v_max.value
+        ts = [0, dt1, 2 * dt1, 2 * dt1 + dt2, 3 * dt1 + dt2]
+        js = [slider_j0.value, -slider_j0.value, 0, -slider_j0.value, slider_j0.value]
+        duration = dt1 * 4 + dt2
+
+    time = np.linspace(0, duration, 1000)
     j, a, v, p = calculate_profile(time, ts, js)
     return {
         "time": time,
