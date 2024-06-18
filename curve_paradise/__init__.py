@@ -14,7 +14,6 @@ def interpolate(x, coeffs, deg):
 
 def calculate_profile(t, ts, js, init=[0, 0, 0]):
     profiles = [np.zeros_like(t) for _ in range(len(init) + 1)]
-    ts = [0, 1 / 4, 3 / 4]
 
     for i, ji in enumerate(js):
         is_last = i == len(js) - 1
@@ -31,25 +30,29 @@ def calculate_profile(t, ts, js, init=[0, 0, 0]):
 
 
 # Initial parameter values
-time = np.linspace(0, 1, 101)
-a_init, b_init, c_init, d_init = 1, 0, 0, 0
-
-# Create a ColumnDataSource with initial values
+j0 = 1
+v_max = 1
+d = 1
 
 # Create sliders
-slider_a = Slider(start=-5, end=5, value=a_init, step=0.1, title="a_max")
-slider_b = Slider(start=-5, end=5, value=b_init, step=0.1, title="b_max")
-slider_c = Slider(start=-5, end=5, value=c_init, step=0.1, title="c_max")
-slider_d = Slider(start=-5, end=5, value=d_init, step=0.1, title="d_max")
+slider_j0 = Slider(start=0, end=5, value=j0, step=0.1, title="j0")
+slider_v_max = Slider(start=0, end=5, value=v_max, step=0.1, title="v_max")
+slider_d = Slider(start=0, end=5, value=d, step=0.1, title="d")
 
 
 def get_data():
-    j, a, v, p = calculate_profile(
-        time,
-        [0, 1 / 4, 3 / 4],
-        [slider_a.value, -slider_a.value, slider_a.value],
-    )
-    return {"time": time, "position": p, "velocity": v, "acceleration": a, "jerk": j}
+    dt = np.power(slider_d.value / (2 * slider_j0.value), 1 / 3)
+    time = np.linspace(0, 4 * dt, 1000)
+    ts = [0, dt, 3 * dt]
+    js = [slider_j0.value, -slider_j0.value, slider_j0.value]
+    j, a, v, p = calculate_profile(time, ts, js)
+    return {
+        "time": time,
+        "position": p,
+        "velocity": v,
+        "acceleration": a,
+        "jerk": j,
+    }
 
 
 source = ColumnDataSource(data=get_data())
@@ -61,31 +64,29 @@ def update_data(attr, old, new):
 
 
 # Link the callback to the slider value changes
-slider_a.on_change("value", update_data)
-slider_b.on_change("value", update_data)
-slider_c.on_change("value", update_data)
+slider_j0.on_change("value", update_data)
+slider_v_max.on_change("value", update_data)
 slider_d.on_change("value", update_data)
 
 # Create a figure and plot the equation
-plot_position = figure(x_range=(0, 1), y_range=(-1, 1))
+plot_position = figure()
 plot_position.line(x="time", y="position", source=source, line_width=3)
 
-plot_velocity = figure(x_range=(0, 1), y_range=(-1, 1))
+plot_velocity = figure()
 plot_velocity.line(x="time", y="velocity", source=source, line_width=3)
 
-plot_acceleration = figure(x_range=(0, 1), y_range=(-1, 1))
+plot_acceleration = figure()
 plot_acceleration.line(x="time", y="acceleration", source=source, line_width=3)
 
-plot_jerk = figure(x_range=(0, 1), y_range=(-1, 1))
+plot_jerk = figure()
 plot_jerk.line(x="time", y="jerk", source=source, line_width=3)
 
 # Display the plot with sliders
 
 curdoc().add_root(
     column(
-        slider_a,
-        slider_b,
-        slider_c,
+        slider_j0,
+        slider_v_max,
         slider_d,
         row(plot_position, plot_velocity, plot_acceleration, plot_jerk),
     ),
