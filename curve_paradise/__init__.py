@@ -1,5 +1,8 @@
-import numpy as np
+"""Curve Paradise."""
+
 from math import factorial
+
+import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, Slider
@@ -7,12 +10,33 @@ from bokeh.plotting import figure
 
 
 def interpolate(x, coeffs, deg):
+    """Interpolate a polynomial.
+
+    Args:
+        x: The independent variable, can be a scalar or an array.
+        coeffs: The coefficients of the polynomial.
+        deg: The degree of the polynomial, will ignore higher order terms.
+
+    Returns:
+        The interpolated value.
+    """
     return sum(
         c * x**i / factorial(i) for i, c in zip(reversed(range(deg + 1)), coeffs, strict=False)
     )
 
 
-def calculate_profile(t, ts, js, init=[0, 0, 0]):
+def calculate_profile(t, ts, js):
+    """Calculate the position, velocity, acceleration, and jerk of a curve.
+
+    Args:
+        t: The time array.
+        ts: The time array of the curve.
+        js: The jerk array of the curve.
+
+    Returns:
+        A tuple of arrays containing the position, velocity, acceleration, and jerk.
+    """
+    init = [0, 0, 0]
     profiles = [np.zeros_like(t) for _ in range(len(init) + 1)]
 
     for i, ji in enumerate(js):
@@ -43,6 +67,7 @@ slider_d = Slider(start=0, end=5, value=d_init, step=0.1, title="d")
 
 
 def get_data():
+    """Get the data for the plot."""
     j0 = slider_j0.value
     a_max = slider_a_max.value
     v_max = slider_v_max.value
@@ -119,7 +144,8 @@ source = ColumnDataSource(data=get_data())
 
 
 # Define a callback function to update the data source
-def update_data(attr, old, new):
+def update_data(_attr, _old, _new):
+    """Update the data source when the sliders are changed."""
     source.data = get_data()
 
 

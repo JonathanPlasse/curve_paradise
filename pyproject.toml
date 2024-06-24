@@ -10,7 +10,14 @@ python = "^3.10"
 bokeh = "^3.4.1"
 numpy = "^1.26.4"
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+select = ["ALL"]
+ignore = ["ANN"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
